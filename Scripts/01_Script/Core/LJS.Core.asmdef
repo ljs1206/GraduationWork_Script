@@ -1,0 +1,23 @@
+{
+    "name": "LJS.Core",
+    "rootNamespace": "LJS.Core",
+    "references": [
+        "GUID:bc2bccc7fdd309a4a9509427df1b7d94",
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95",
+        "GUID:9e76ffd1f3f77a246968f93aa898a174",
+        "GUID:8838a5583c8c0b34d9f0c10848ab5026",
+        "GUID:fe61c1b3e3c11174190e8d6edf7605df",
+        "GUID:5228abf8a78a8a142b7eb25679fb5a3b",
+        "GUID:7a6e9789677761e4097bc1dcc134963f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

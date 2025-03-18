@@ -1,0 +1,26 @@
+{
+    "name": "LJS.Item.Effect",
+    "rootNamespace": "",
+    "references": [
+        "GUID:ee699b6d22b637f418f28698fdc309c9",
+        "GUID:a88e20ec90497d6429de4f692695fe43",
+        "GUID:d1af6e3b10ea998489ff83ea4c4dfb0a",
+        "GUID:ca5b8601c5ebe64409c1d85140356a0c",
+        "GUID:308c623e4493ebb40a9d8177e9a2043b",
+        "GUID:9fc11ab03a9187d45baf4f15474639fe",
+        "GUID:9bd4c20490ee0004db30075e8372ebe1",
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95",
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
+        "GUID:2a33d90e6aa64bd49a062c9d96b1c817",
+        "GUID:bc2bccc7fdd309a4a9509427df1b7d94"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

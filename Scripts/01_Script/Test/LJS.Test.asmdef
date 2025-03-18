@@ -1,0 +1,21 @@
+{
+    "name": "LJS.Test",
+    "rootNamespace": "LJS.Test",
+    "references": [
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:9c77cb8b85a0ccd40a1ba93394b9b56e",
+        "GUID:2a33d90e6aa64bd49a062c9d96b1c817",
+        "GUID:bc2bccc7fdd309a4a9509427df1b7d94",
+        "GUID:5228abf8a78a8a142b7eb25679fb5a3b",
+        "GUID:222e5ccfddd41b146b2cd2f3488d0808"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,67 @@
+.custom-label {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(68, 138, 255);
+}
+
+.unity-two-pane-split-view__dragline-anchor {
+    width: 0;
+    height: 0;
+    display: none;
+    visibility: hidden;
+    overflow: visible;
+    opacity: 0;
+}
+
+.unity-base-text-field__label {
+    left: 5px;
+    font-size: 15px;
+    -unity-font-definition: url("project://database/Assets/00Work/LJS/04_Font/DNFForgedBlade-Medium.ttf?fileID=12800000&guid=57d31f5b8589fcb4685194f4e84723b1&type=3#DNFForgedBlade-Medium");
+    flex-grow: 0;
+}
+
+.unity-enum-flags-field__label {
+    font-size: 15px;
+    -unity-font-definition: url("project://database/Assets/00Work/LJS/04_Font/DNFForgedBlade-Medium.ttf?fileID=12800000&guid=57d31f5b8589fcb4685194f4e84723b1&type=3#DNFForgedBlade-Medium");
+    width: 10px;
+}
+
+.unity-enum-flags-field__input {
+    left: -8px;
+}
+
+.description-label {
+}
+
+.unity-text-field__input {
+    -unity-text-align: upper-left;
+    white-space: normal;
+    text-overflow: clip;
+}
+
+.unity-object-field__label {
+    -unity-font-definition: url("project://database/Assets/00Work/LJS/04_Font/DNFForgedBlade-Medium.ttf?fileID=12800000&guid=57d31f5b8589fcb4685194f4e84723b1&type=3#DNFForgedBlade-Medium");
+    font-size: 15px;
+    left: 7px;
+}
+
+.unity-toggle__label {
+    -unity-font-definition: url("project://database/Assets/00Work/LJS/04_Font/DNFForgedBlade-Medium.ttf?fileID=12800000&guid=57d31f5b8589fcb4685194f4e84723b1&type=3#DNFForgedBlade-Medium");
+    font-size: 15px;
+}
+
+.unity-popup-field__label {
+    font-size: 15px;
+    left: 6px;
+    -unity-font-definition: url("project://database/Assets/00Work/LJS/04_Font/DNFForgedBlade-Medium.ttf?fileID=12800000&guid=57d31f5b8589fcb4685194f4e84723b1&type=3#DNFForgedBlade-Medium");
+}
+
+.unity-integer-field__input {
+    left: 40px;
+    flex-grow: 1;
+    width: 0;
+    height: auto;
+}
+
+.unity-foldout {
+}
