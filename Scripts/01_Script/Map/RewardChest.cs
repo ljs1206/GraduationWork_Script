@@ -5,45 +5,64 @@ using KHJ;
 using KHJ.SO;
 using LJS.Item;
 using LJS.UI;
+using Main.Runtime.Core.Events;
 using Main.Shared;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using TMPro;
+using BIS.Data;
+//using T
 
 namespace LJS.Map
 {
     public enum RewardType
     {
-        Posion = 0, Piece
+        Posion = 0,
+        Piece
     }
+
     public class RewardChest : MonoBehaviour, IPoolable, IInteractable
     {
         [SerializeField] private ItemDataTableSO _itemDataTableSO;
         [SerializeField] private SynergyBlockTableSO _blockTableSO;
-        
+
         [SerializeField] private ParticleSystem _openParticle;
         [SerializeField] private ParticleSystem _smokeParticle;
-        
+
         [SerializeField] private RewardPanel _rewardPanel;
 
         [SerializeField] private PoolManagerSO _poolManager;
-        
+        [SerializeField] private TextMeshProUGUI _coinText;
+        [SerializeField] private CurrencySO _coinData;
         private List<ItemSOBase> _selectedList;
-        private Animation _animation;
+        private Animation _animationCompo;
 
         public bool OpenNow { get; set; }
 
-        private void Update()
+        private GameEventChannelSO _gameEventChannel;
+
+        private void Awake()
         {
-            if(OpenNow & Managers.UI.GetPopupCount() == 0 & 
-                Keyboard.current.escapeKey.wasPressedThisFrame)
-                CloseChest();
+            _gameEventChannel = Managers.Resource.Load<GameEventChannelSO>("GameEventChannel");
+            _gameEventChannel.AddListener<EndBattle>(HandleEndBattle);
+            _coinText.text = "5,000";
         }
-        
+
+        private void OnDestroy()
+        {
+            _gameEventChannel.RemoveListener<EndBattle>(HandleEndBattle);
+        }
+
+        private void HandleEndBattle(EndBattle evt)
+        {
+            _pool.Push(this);
+        }
+
         public void Open(int rewardCount)
         {
+            if (OpenNow) return;
             OpenNow = true;
             _smokeParticle.Play();
-            _animation.PlayQueued("ChestOpen");
+            _animationCompo.PlayQueued("ChestOpen");
             OpenAction(rewardCount);
         }
 
@@ -68,10 +87,13 @@ namespace LJS.Map
                     _poolManager.Push(this);
                 });
         }
-        
+
         List<ScriptableObject> list = new();
+
         private void OpenAction(int rewardCount)
         {
+            _coinData.ChangeValue(_coinData.CurrentAmmount + 5000);
+
             list = new();
             for (int i = 0; i < rewardCount; ++i)
             {
@@ -82,16 +104,16 @@ namespace LJS.Map
                 switch ((RewardType)rand)
                 {
                     case RewardType.Posion:
-                    {
-                        list.Add(item);
-                        item.UseItem(); // 나중에 추가 인벤토리로 옮겨야함
-                    }
+                        {
+                            list.Add(item);
+                            item.UseItem();
+                        }
                         break;
                     case RewardType.Piece:
-                    {
-                        SynergyBoardManager.Instance.SetFistSlotBlock(synergy);
-                        list.Add(synergy);
-                    }
+                        {
+                            SynergyBoardManager.Instance.SetFistSlotBlock(synergy, true);
+                            list.Add(synergy);
+                        }
                         break;
                 }
             }
@@ -100,31 +122,37 @@ namespace LJS.Map
         private void CloseChest()
         {
             OpenNow = false;
-            _animation.PlayQueued("ChestClose");
+            _animationCompo.PlayQueued("ChestClose");
         }
 
         #region IPoolable
+
         [SerializeField] private PoolTypeSO _typeSO;
         public PoolTypeSO PoolType => _typeSO;
-        
+
         public GameObject GameObject => gameObject;
-        
+
+        private Pool _pool;
+
         public void SetUpPool(Pool pool)
         {
-            _animation = GetComponent<Animation>();
+            _animationCompo = GetComponentInChildren<Animation>();
+            _pool = pool;
         }
 
         public void ResetItem()
         {
             _rewardPanel.ResetPanel();
         }
+
         #endregion
 
         #region Interact
 
         public Transform UIDisplayTrm => transform;
         public Vector3 AdditionalUIDisplayPos => Vector3.up * 1;
-        [field:SerializeField] public string Description { get; set; }
+        [field: SerializeField] public string Description { get; set; }
+
         public void Interact(Transform Interactor)
         {
             Open(5);

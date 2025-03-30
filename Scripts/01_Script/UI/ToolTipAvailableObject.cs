@@ -8,7 +8,7 @@ using KHJ.SO;
 
 namespace LJS.UI
 {
-    public class ToolTipAvailableObject : MonoBehaviour, IPointerDownHandler
+    public class ToolTipAvailableObject : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         private ItemSOBase _itemInfo;
         private SynergySO _synergyInfo;
@@ -38,7 +38,17 @@ namespace LJS.UI
             _raycastResult = new();
         }
 
-        public void OnPointerDown(PointerEventData eventData)
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            ToolTipOpen();
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            _toolTipCompo.ToolTipClose();
+        }
+
+        private void ToolTipOpen()
         {
             _pointerData = new PointerEventData(EventSystem.current);
             _pointerData.position = Input.mousePosition;

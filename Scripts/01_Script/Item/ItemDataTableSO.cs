@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Sirenix.Utilities;
 using UnityEngine;
 
 namespace LJS.Item
@@ -7,6 +8,12 @@ namespace LJS.Item
     public class ItemDataTableSO : ScriptableObject
     {
         public List<ItemSOBase> ItemList;
+        [SerializeField] private RandomValueSO PercentageList;
+
+        public void OnValidate()
+        {
+            PercentageList.percentageList.SetLength(ItemList.Count);
+        }
 
         public ItemSOBase RandomItemOutput()
         {

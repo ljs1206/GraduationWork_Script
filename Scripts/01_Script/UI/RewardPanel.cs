@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Collections;
+using System.Threading;
+using System.Threading.Tasks;
 using DG.Tweening;
 using KHJ.SO;
 using LJS.Item;
+using Main.Runtime.Core.Events;
+using Main.Runtime.Manager;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using BIS.Core.Utility;
 
 namespace LJS.UI
 {
@@ -18,19 +22,22 @@ namespace LJS.UI
 
     public class RewardPanel : MonoBehaviour
     {
-        [Header("Base Setting")] [SerializeField]
+        [Header("Base Setting")]
+        [SerializeField]
         private List<Transform> _lineList = new();
 
         [SerializeField] private RectTransform _itemCartalog;
         [SerializeField] private ToolTip _toolTipCompo;
         [SerializeField] private Canvas _canvas;
 
-        [Header("Icon Setting")] [SerializeField]
+        [Header("Icon Setting")]
+        [SerializeField]
         private float _iconWidth;
 
         [SerializeField] private float _iconHeight;
 
-        [Header("Text Setting")] [SerializeField]
+        [Header("Text Setting")]
+        [SerializeField]
         private TMP_FontAsset _font;
 
         [SerializeField] private float _nameTagWidth;
@@ -42,10 +49,27 @@ namespace LJS.UI
 
         private float _panelWidth;
         private bool isOpen;
+        private bool closeNow;
+
+        private GameEventChannelSO _gameEventChannel;
+        private CancellationTokenSource _tokenSource;
+
+        private void Awake()
+        {
+            _gameEventChannel = Managers.Addressable.Load<GameEventChannelSO>("GameEventChannel");
+            _tokenSource = new CancellationTokenSource();
+        }
+
+        private void OnDestroy()
+        {
+            _tokenSource.Cancel();
+            _tokenSource.Dispose();
+        }
 
         private void Start()
         {
             isOpen = false;
+            closeNow = false;
             _panelWidth = _itemCartalog.rect.width;
         }
 
@@ -54,11 +78,17 @@ namespace LJS.UI
             if (isOpen) return;
 
             isOpen = true;
-            WindowIn(() => StartCoroutine(OpenPanelCoro(list)));
+            //Time.timeScale = 0;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            WindowIn(() => OpenPanelCoro(list));
         }
 
         public void ClosePanel()
         {
+            if (closeNow) return;
+
+            closeNow = true;
             isOpen = false;
             WindowOut();
             _toolTipCompo.ToolTipClose();
@@ -67,14 +97,17 @@ namespace LJS.UI
         public void ResetPanel()
         {
             if (_lineList[0].childCount <= 0) return;
-            
+
             for (int i = _lineList.Count - 1; i >= 0; i--)
             {
                 Destroy(_lineList[i].gameObject);
             }
+
+            closeNow = false;
+            transform.position = new Vector3(0, 1080, 0);
         }
 
-        private IEnumerator OpenPanelCoro(List<ScriptableObject> list = null)
+        private async Task OpenPanelCoro(List<ScriptableObject> list = null)
         {
             float iconWidthSum = 0;
             int lineNumber = 0;
@@ -92,7 +125,7 @@ namespace LJS.UI
                 iconWidthSum += _iconWidth;
 
                 if (iconWidthSum >= _panelWidth - 220)
-                    // horizontal layOut Group의 spacing과 vertical // 의 padding 고려 수치. 대략적임 수정 필요
+                // horizontal layOut Group의 spacing과 vertical // 의 padding 고려 수치. 대략적임 수정 필요
                 {
                     iconWidthSum = 0;
                     lineNumber++;
@@ -106,7 +139,7 @@ namespace LJS.UI
                 Image imageCompo = icon.AddComponent<Image>();
 
                 imageCompo.sprite = element is ItemSOBase ? item.icon : synergy.ItemIcon;
-                imageCompo.raycastPadding = new Vector4(0, 0, 0, 10); 
+                imageCompo.raycastPadding = new Vector4(0, 0, 0, 10);
                 rectTrm.sizeDelta = new Vector2(_iconWidth, _iconHeight);
 
                 icon.transform.SetParent(_lineList[lineNumber]);
@@ -129,21 +162,28 @@ namespace LJS.UI
 
                 #endregion
 
-                yield return new WaitForSeconds(0.3f);
+                await Task.Delay(300, _tokenSource.Token);
+
+                // yield return new WaitForSecondsRealtime(0.3f);
             }
         }
 
         private void WindowIn(Action endEvent)
         {
             // Lerp 이용해서 만들기 클릭 방지도 만들어야 할듯??
-            transform.DOMoveY(transform.position.y - Screen.height, 1f)
-                .SetEase(Ease.OutCubic).OnComplete(() => endEvent?.Invoke());
+            Time.timeScale = 0;
+            transform.DOLocalMoveY(0, 0).SetUpdate(true);
+            Util.UIFadeOut(gameObject, false, onCompleteCallBack: () => endEvent?.Invoke());
+            //transform.DOLocalMoveY(0, 1f)
+            //    .SetEase(Ease.OutCubic).OnComplete(() => endEvent?.Invoke()).SetUpdate(true);
         }
 
         public void WindowOut() // 선택지 선택후 불러올 예정?
         {
-            transform.DOMoveY(transform.position.y + Screen.height, 1f)
-                .SetEase(Ease.OutCubic);
+            // transform.DOMoveY(transform.position.y + Screen.height, 1f)
+            //     .SetEase(Ease.OutCubic).SetUpdate(true);
+            var evt = GameEvents.EndBattle;
+            _gameEventChannel.RaiseEvent(evt);
         }
     }
 }

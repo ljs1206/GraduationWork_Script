@@ -1,5 +1,3 @@
-using System;
-using System.Numerics;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -31,7 +29,7 @@ namespace LJS.UI
         public void ToolTipOpen(string name, string description)
         {
             transform.localScale = Vector3.zero;
-            transform.DOScale(Vector3.one, 0.2f);
+            transform.DOScale(Vector3.one, 0.2f).SetUpdate(true);
             _rectTrm = GetComponent<RectTransform>();
             Vector3 mousePos = Input.mousePosition;
             
@@ -43,7 +41,8 @@ namespace LJS.UI
 
         public void ToolTipClose()
         {
-            transform.DOScale(Vector3.zero, 0.2f);
+            transform.DOScale(Vector3.zero, 0.2f)
+                .SetUpdate(true);
         }
     }
 }
