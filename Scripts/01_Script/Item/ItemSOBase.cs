@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LJS.Utils;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -20,7 +19,7 @@ namespace LJS.Item
         DeBuff = 1 << 2
     }
 
-    public class ItemSOBase : ScriptableObject, IBinding
+    public class ItemSOBase : ScriptableObject, IGetValueable, IBinding
     {
         [Header("BaseInfo")]
         [BoxGroup(GroupName = "BaseInfo")]
@@ -72,61 +71,41 @@ namespace LJS.Item
         public int weakness;
         #endregion
         
-        CancellationTokenSource destroyCancellation;
-
+        private Dictionary<EffectType, int>  effectDict = new();
+		CancellationTokenSource destroyCancellation;
+		
         public ItemSOBase()
         {
-            destroyCancellation = new CancellationTokenSource();
+            effectDict = new Dictionary<EffectType, int>
+            {
+                { EffectType.Heal, healCount },
+                { EffectType.Damage, damageCount },
+                { EffectType.Strength, strength },
+                { EffectType.Weakness, weakness },
+                { EffectType.DefenceDecrease, defenceDecrease },
+                { EffectType.DefenceIncrease, defenceIncrease }
+            };
+			destroyCancellation = new CancellationTokenSource();
         }
-
-        public void OnDestroy()
+		
+		public void OnDestroy()
         {
             destroyCancellation.Cancel();
             destroyCancellation.Dispose();
         }
+
         
         public virtual void UseItem()
         {
             foreach(ItemEffectBase effect in effectList)
             {
-                float value = 0;
-                switch (effect.effectType)
-                {
-                    case EffectType.Heal:
-                        value = healCount;;
-                        break;
-                    case EffectType.Damage:
-                        value = damageCount;;
-                        break;
-                    case EffectType.Strength:
-                        value = strength;
-                        break;
-                    case EffectType.Weakness:
-                        value = weakness;
-                        break;
-                    case EffectType.DefenceDecrease:
-                        value = defenceDecrease;
-                        break;
-                    case EffectType.DefenceIncrease:
-                        value = defenceIncrease;
-                        break;
-                }
-                
-                effect.UseEffect(value);
+                effect.SetEffectValue(this);
             }
             
             if (endImmediately)
                 EndItemEffect();
             else
                 Delay(EndItemEffect, effectEndTime);
-        }
-
-        protected async UniTask Delay(Action action, int delayTime)
-        {
-            await UniTask.Delay(TimeSpan.FromSeconds(delayTime),
-                false,PlayerLoopTiming.Update, 
-                destroyCancellation.Token);
-            action?.Invoke();
         }
 
         public virtual void EndItemEffect()
@@ -137,6 +116,20 @@ namespace LJS.Item
             }
         }
 
+        public float GetValue(EffectType effectType)
+        {
+            return effectDict.ContainsKey(effectType) ? effectDict[effectType] : 0;
+        }
+		
+		protected async UniTask Delay(Action action, int delayTime)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(delayTime),
+                false,PlayerLoopTiming.Update, 
+                destroyCancellation.Token);
+            action?.Invoke();
+        }
+		
+		
         public void PreUpdate()
         {
             

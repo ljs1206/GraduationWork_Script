@@ -11,12 +11,12 @@ namespace LJS.Item
     public class SynergyBlockTableSO : ScriptableObject
     {
         public List<SynergySO> synergyList = new();
-        [SerializeField] private RandomValueSO PercentageList;
-        
-        public void OnValidate()
-        {
-            PercentageList.percentageList.SetLength(synergyList.Count);
-        }
+        // [SerializeField] private RandomValueSO PercentageList;
+        //
+        // public void OnValidate()
+        // {
+        //     PercentageList.percentageList.SetLength(synergyList.Count);
+        // }
 
         public SynergySO RandomSynergyOutput()
         {

@@ -10,6 +10,8 @@ using Main.Shared;
 using UnityEngine;
 using TMPro;
 using BIS.Data;
+using Main.Core;
+
 //using T
 
 namespace LJS.Map
@@ -42,7 +44,7 @@ namespace LJS.Map
 
         private void Awake()
         {
-            _gameEventChannel = Managers.Resource.Load<GameEventChannelSO>("GameEventChannel");
+            _gameEventChannel = AddressableManager.Load<GameEventChannelSO>("GameEventChannel");
             _gameEventChannel.AddListener<EndBattle>(HandleEndBattle);
             _coinText.text = "5,000";
         }
@@ -104,16 +106,16 @@ namespace LJS.Map
                 switch ((RewardType)rand)
                 {
                     case RewardType.Posion:
-                        {
-                            list.Add(item);
-                            item.UseItem();
-                        }
+                    {
+                        list.Add(item);
+                        item.UseItem();
+                    }
                         break;
                     case RewardType.Piece:
-                        {
-                            SynergyBoardManager.Instance.SetFistSlotBlock(synergy, true);
-                            list.Add(synergy);
-                        }
+                    {
+                        SynergyBoardManager.Instance.SetFistSlotBlock(synergy, true);
+                        list.Add(synergy);
+                    }
                         break;
                 }
             }

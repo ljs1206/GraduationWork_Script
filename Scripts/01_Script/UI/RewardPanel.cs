@@ -11,6 +11,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using BIS.Core.Utility;
+using Main.Core;
 
 namespace LJS.UI
 {
@@ -56,7 +57,7 @@ namespace LJS.UI
 
         private void Awake()
         {
-            _gameEventChannel = Managers.Addressable.Load<GameEventChannelSO>("GameEventChannel");
+            _gameEventChannel = AddressableManager.Load<GameEventChannelSO>("GameEventChannel");
             _tokenSource = new CancellationTokenSource();
         }
 
