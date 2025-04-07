@@ -37,9 +37,13 @@ public class RoomGenrator : MonoBehaviour
     [SerializeField] private RoomTableSO _roomTable;
     [SerializeField] private Material _pathMat;
     [SerializeField] private int _maxTryCount;
+    [SerializeField] private GameObject _wallPrefab;
+    [SerializeField] private GameObject _roofPrefab;
 
     private int[,] _map;
-    private RoomNode[,] _roomArray; 
+    private RoomNode[,] _roomArray;
+    private int[] _dx = { 1, 0, -1, 0 };
+    private int[] _dy = { 0, -1, 0, 1 };
     private bool _isSpawnNow;
 
     private int currentX = 0;
@@ -48,6 +52,7 @@ public class RoomGenrator : MonoBehaviour
 
     private Stack<MapInfo> _mapStack;
     private List<MapInfo> _failureList;
+    private MeshRenderer _renderCompo;
 
     private void OnValidate()
     {
@@ -89,37 +94,11 @@ public class RoomGenrator : MonoBehaviour
         currentY = 4;
         _mapStack.Push(new MapInfo{ x = 4, y = 4 });
         rand = UnityEngine.Random.Range(0, 4);
-        switch (rand)
-        {
-            case 0:
-            {
-                currentX += 1;
-                _map[currentX, currentY] = 1;
-                _mapStack.Push(new MapInfo{x = currentX, y = currentY});
-            }
-                break;
-            case 1:
-            {
-                currentX -= 1;
-                _map[currentX, currentY] = 1;
-                _mapStack.Push(new MapInfo{x = currentX, y = currentY});
-            }
-                break;
-            case 2:
-            {
-                currentY += 1;
-                _map[currentX, currentY] = 1;
-                _mapStack.Push(new MapInfo{x = currentX, y = currentY});
-            }
-                break;
-            case 3:
-            {
-                currentY -= 1;
-                _map[currentX, currentY] = 1;
-                _mapStack.Push(new MapInfo{x = currentX, y = currentY});
-            } 
-                break;
-        }
+        currentX += _dx[rand];
+        currentY += _dy[rand];
+        _map[currentX, currentY] = 1;
+        _mapStack.Push(new MapInfo{x = currentX, y = currentY});
+
         Debug.Log("Start : " + currentX + " " + currentY);
         ++currentSpawnCount;
         int tryCount = 0;
@@ -130,6 +109,7 @@ public class RoomGenrator : MonoBehaviour
             if(currentSpawnCount >= _roomSpawnCount)
             {
                 Debug.Log(_tryCount);
+                _tryCount = 0;
                 CreateRoom();
                 return;
             }
@@ -153,28 +133,12 @@ public class RoomGenrator : MonoBehaviour
             
             for (int i = 0; i < 4; ++i)
             {
-                int x = 0, y = 0;
-                switch (i)
-                {
-                    case 0:
-                        x = 1;
-                        break;
-                    case 1:
-                        x = -1;
-                        break;
-                    case 2:
-                        y = 1;
-                        break;
-                    case 3:
-                        y = -1;   
-                        break;
-                }
 
-                if (CanGenerateRoom(x, y) == true)
+                if (CanGenerateRoom(_dx[i], _dy[i]) == true)
                 {
                     createSuccess = true;
-                    currentX += x;
-                    currentY += y;
+                    currentX += _dx[i];
+                    currentY += _dy[i];
                     Debug.Log("Success : " + currentX + " " + currentY);
                     _map[currentX, currentY] = 1;
                     _mapStack.Push(new MapInfo{x = currentX, y = currentY});
@@ -216,27 +180,10 @@ public class RoomGenrator : MonoBehaviour
             
             for (int i = 0; i < 4; ++i)
             {
-                int x = 0, y = 0;
-                switch (i)
+                if (CanGenerateRoom(_dx[i], _dy[i], false) == true)
                 {
-                    case 0:
-                        x = 1;
-                        break;
-                    case 1:
-                        x = -1;
-                        break;
-                    case 2:
-                        y = 1;
-                        break;
-                    case 3:
-                        y = -1;   
-                        break;
-                }
-
-                if (CanGenerateRoom(x, y, false) == true)
-                {
-                    currentX += x;
-                    currentY += y;
+                    currentX += _dx[i];
+                    currentY += _dy[i];
                     _map[currentX, currentY] = 1;
                     Debug.Log("Success : " + currentX + " " + currentY);
                     failureSpawnCount++;
@@ -249,6 +196,7 @@ public class RoomGenrator : MonoBehaviour
         if(currentSpawnCount < _roomSpawnCount) DefaultSetting();
         else
         {
+            _tryCount = 0;
             Debug.Log(_tryCount);
             CreateRoom();
         }
@@ -287,26 +235,8 @@ public class RoomGenrator : MonoBehaviour
         int count = 0;
         for (int i = 0; i < 4; ++i)
         {
-            int countingX = 0;
-            int countingY = 0;
-            switch (i)
-            {
-                case 0:
-                    countingX = 1;
-                    break;
-                case 1:
-                    countingX = -1;
-                    break;
-                case 2:
-                    countingY = +1;
-                    break;
-                case 3:
-                    countingY = -1;   
-                    break;
-            }
-
-            int allX = sumX + countingX;
-            int allY = sumY + countingY;
+            int allX = sumX + _dx[i];
+            int allY = sumY + _dy[i];
             if(allX >= _gridX || allX < 0) continue;
             if(allY >= _gridY || allY < 0) continue;
             
@@ -356,6 +286,7 @@ public class RoomGenrator : MonoBehaviour
                         = new Vector3(40 * i, 0, 40 * j);
                     obj.transform.rotation = Quaternion.Euler(0, 0, 0);
                     obj.transform.Find("Tile").GetComponent<TextMeshPro>().text = $"{i}, {j}";
+                    room.SetInfo(_wallPrefab, _pathMat, _roomArray, _gridX, _gridY, _pathWidth, _roofPrefab);
                     _roomArray[i, j] = room;
                 }
             }
@@ -369,153 +300,9 @@ public class RoomGenrator : MonoBehaviour
                 if(i == 4 && j == 4) continue;
                 if (_roomArray[i, j] != null)
                 {
-                    LinkRoom(_roomArray[i, j], i, j);
+                    _roomArray[i, j].LinkRoom(i, j);
                 }
             }
         }
-    }
-
-    private void LinkRoom(RoomNode room, int x, int y)
-    {
-        for (int i = 0; i < 4; ++i)
-        {
-            switch ((EnterPoint.DIR)i)
-            {
-                case EnterPoint.DIR.Up:
-                {
-                    if (y - 1 < 0) break;
-                    
-                    if (_roomArray[x, y - 1] != null)
-                    {
-                        CreatePath(room.EnterPointList.Find(a => a.dir == EnterPoint.DIR.Up).transform,
-                            _roomArray[x, y - 1].EnterPointList.
-                                Find(a => a.dir == EnterPoint.DIR.Down).transform,
-                            (EnterPoint.DIR)i);
-                    }
-                }
-                    break;
-                case EnterPoint.DIR.Down:
-                {
-                    if (y + 1 >= _gridY) break;
-                    
-                    if (_roomArray[x, y + 1] != null)
-                    {
-                        CreatePath(room.EnterPointList.Find(a => a.dir == EnterPoint.DIR.Down).transform,
-                            _roomArray[x, y + 1].EnterPointList.
-                                Find(a => a.dir == EnterPoint.DIR.Up).transform,
-                            (EnterPoint.DIR)i);
-                    }
-                }
-                    break;
-                case EnterPoint.DIR.Left:
-                {
-                    if (x + 1 >= _gridX) break;
-                    
-                    if (_roomArray[x + 1, y] != null)
-                    {
-                        CreatePath(room.EnterPointList.Find(a => a.dir == EnterPoint.DIR.Left).transform,
-                            _roomArray[x + 1, y].EnterPointList.
-                                Find(a => a.dir == EnterPoint.DIR.Right).transform,
-                            (EnterPoint.DIR)i);
-                    }
-                }
-                    break;
-                case EnterPoint.DIR.Right:
-                {
-                    if (x - 1 < 0) break;
-                    
-                    if (_roomArray[x - 1, y] != null)
-                    {
-                        CreatePath(room.EnterPointList.Find(a => a.dir == EnterPoint.DIR.Right).transform,
-                            _roomArray[x - 1, y].EnterPointList.
-                                Find(a => a.dir == EnterPoint.DIR.Left).transform
-                            , (EnterPoint.DIR)i);
-                    }
-                }
-                    break;
-            }
-        }
-    }
-
-    private void CreatePath(Transform start, Transform end, EnterPoint.DIR dir)
-    {
-        Mesh pathMesh = new Mesh();
-        Vector3 topLeftV = Vector3.zero,
-            topRightV = Vector3.zero,
-            bottomLeftV = Vector3.zero,
-            bottomRightV = Vector3.zero;
-        
-        switch (dir)
-        {
-            case EnterPoint.DIR.Left:
-            {
-                topLeftV = new Vector3(end.position.x, start.position.y, start.position.z - _pathWidth / 2);
-                topRightV = new Vector3(start.position.x, start.position.y, start.position.z - _pathWidth / 2);
-                bottomLeftV = new Vector3(end.position.x, start.position.y, start.position.z + _pathWidth / 2);
-                bottomRightV = new Vector3(start.position.x, start.position.y, start.position.z + _pathWidth / 2);
-            }
-                break;
-            case EnterPoint.DIR.Right:
-            {
-                topLeftV = new Vector3(start.position.x, start.position.y, start.position.z - _pathWidth / 2);
-                topRightV = new Vector3(end.position.x, start.position.y, start.position.z - _pathWidth / 2);
-                bottomLeftV = new Vector3(start.position.x, start.position.y, start.position.z + _pathWidth / 2);
-                bottomRightV = new Vector3(end.position.x, start.position.y, start.position.z + _pathWidth / 2);
-            }
-                break;
-            case EnterPoint.DIR.Up:
-            {
-                topLeftV = new Vector3(end.position.x + _pathWidth / 2, start.position.y, end.position.z);
-                topRightV = new Vector3(end.position.x - _pathWidth / 2, start.position.y, end.position.z);
-                bottomLeftV = new Vector3(start.position.x + _pathWidth / 2, start.position.y, start.position.z);
-                bottomRightV = new Vector3(start.position.x - _pathWidth / 2, start.position.y, start.position.z);
-            }
-                break;
-            case EnterPoint.DIR.Down:
-            {
-                topLeftV = new Vector3(start.position.x + _pathWidth / 2, start.position.y, start.position.z);
-                topRightV = new Vector3(start.position.x - _pathWidth / 2, start.position.y, start.position.z);
-                bottomLeftV = new Vector3(end.position.x + _pathWidth / 2, start.position.y, end.position.z);
-                bottomRightV = new Vector3(end.position.x - _pathWidth / 2, start.position.y, end.position.z);
-            }
-                break;
-        }
-
-        Vector3[] vertices = new Vector3[]
-        {
-            topLeftV,
-            topRightV,
-            bottomLeftV,
-            bottomRightV
-        };
-        
-        Vector2[] uvs = new Vector2[vertices.Length];
-        for (int i = 0; i < uvs.Length; i++)
-        {
-            uvs[i] = new Vector2(vertices[i].x, vertices[i].z);
-        }
-
-        int[] triangles = new int[]
-        {
-            0,
-            1,
-            2,
-            2,
-            1,
-            3
-        };
-        
-        pathMesh.vertices = vertices;
-        pathMesh.uv = uvs;
-        pathMesh.triangles = triangles;
-        
-        GameObject floor = new GameObject("Floor", 
-            typeof(MeshFilter), typeof(MeshRenderer), typeof(RoomPath));
-        floor.GetComponent<MeshFilter>().mesh = pathMesh;
-        floor.GetComponent<MeshRenderer>().material = _pathMat;
-        
-        floor.transform.SetParent(transform);
-        floor.transform.localPosition = Vector3.zero;
-        floor.transform.rotation = Quaternion.identity;
     }
 }
