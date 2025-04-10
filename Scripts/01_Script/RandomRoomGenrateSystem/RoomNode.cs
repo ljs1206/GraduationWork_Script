@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using BIS;
 using UnityEngine;
 
 [Serializable]
@@ -27,8 +29,8 @@ public class RoomNode : MonoBehaviour
     private int _gridY;
     private float _pathWidth;
     
-    private int[] _dx = { 1, 0, -1, 0 };
-    private int[] _dy = { 0, -1, 0, 1 };
+    private int[] _dx = { 0, 0, -1, 1 };
+    private int[] _dy = { 1, -1, 0, 0 };
     public bool CreateWall { get; private set; }
 
     public void SetInfo(GameObject wallPrefab, Material pathMat
@@ -44,22 +46,50 @@ public class RoomNode : MonoBehaviour
         CreateWall = false;
     }
     
-    public void LinkRoom(int x, int y)
+    public Func<bool> LinkRoom(int x, int y)
     {
+        // Debug.Log("Link Start");
         for (int i = 0; i < 4; ++i)
         {
-            if (y + _dy[i] < 0 || y + _dy[i] >= _gridY) break;
-            if (x + _dx[i] < 0 || x + _dx[i] >= _gridX) break;
+            // Debug.Log(_gridX);
+            // Debug.Log(_gridY);
+            if (y + _dy[i] < 0 || y + _dy[i] >= _gridY) continue;
+            if (x + _dx[i] < 0 || x + _dx[i] >= _gridX) continue;
             if (_roomArray[x + _dx[i], y + _dy[i]] != null)
             {
                 EnterPoint.DIR dir = FindDir(_dx[i], _dy[i]);
-                CreatePath(EnterPointList.Find(a => a.dir == EnterPoint.DIR.Up).transform,
-                    _roomArray[x + _dx[i], y + _dy[i]].EnterPointList.Find(a => a.dir == EnterPoint.DIR.Down).transform,
-                    (EnterPoint.DIR)i, _roomArray[x + _dx[i], y + _dy[i]]);
+                EnterPoint.DIR reverseDir = EnterPoint.DIR.None;
+
+                switch (dir)
+                {
+                    case EnterPoint.DIR.Up:
+                        reverseDir = EnterPoint.DIR.Down;
+                        break;
+                    case EnterPoint.DIR.Down:
+                        reverseDir = EnterPoint.DIR.Up;
+                        break;
+                    case EnterPoint.DIR.Left:
+                        reverseDir = EnterPoint.DIR.Right;
+                        break;
+                    case EnterPoint.DIR.Right:
+                        reverseDir = EnterPoint.DIR.Left;
+                        break;
+                }
+
+                Transform startTrm = EnterPointList.Find(a => a.dir == reverseDir).transform;
+                Transform endTrm = _roomArray[x + _dx[i], y + _dy[i]]
+                    .EnterPointList.Find(a => a.dir == dir).transform;
+                
+                startTrm.GetComponent<EnterPoints>().ChangeStatePoint(true);
+                endTrm.GetComponent<EnterPoints>().ChangeStatePoint(true);
+                
+                CreatePath(startTrm, endTrm,
+                    reverseDir, _roomArray[x + _dx[i], y + _dy[i]]);
             }
         }
 
-        CreateWall = true;
+        _roomArray[x, y].CreateWall = true;
+        return () => true;
     }
 
     private EnterPoint.DIR FindDir(int x, int y)
@@ -73,7 +103,7 @@ public class RoomNode : MonoBehaviour
                 else
                     return EnterPoint.DIR.Up;
             }
-            else
+            else if(y == 0)
             {
                 if (x == -1)
                     return EnterPoint.DIR.Left;
@@ -87,11 +117,47 @@ public class RoomNode : MonoBehaviour
     private void CreatePath(Transform start, Transform end, EnterPoint.DIR dir, RoomNode targetRoom)
     {
         if (targetRoom.CreateWall) return;
+        targetRoom.CreateWall = true;
+        Debug.Log($"{targetRoom}.{targetRoom.GetHashCode()}");
+        
         Mesh pathMesh = new Mesh();
         Vector3 topLeftV = Vector3.zero,
             topRightV = Vector3.zero,
             bottomLeftV = Vector3.zero,
             bottomRightV = Vector3.zero;
+        
+        if (dir == EnterPoint.DIR.Left || dir == EnterPoint.DIR.Right)
+        {
+            float moveZ = 0;
+            if (start.position.z > end.position.z)
+            {
+                moveZ = start.transform.position.z - end.position.z;
+                targetRoom.transform.position = new Vector3(targetRoom.transform.position.x, 
+                    targetRoom.transform.position.y, targetRoom.transform.position.z + moveZ);
+            }
+            else if (end.position.z > start.position.z)
+            {
+                moveZ = end.transform.position.z - start.position.z;
+                targetRoom.transform.position = new Vector3(targetRoom.transform.position.x, 
+                    targetRoom.transform.position.y, targetRoom.transform.position.z - moveZ);
+            }
+        }
+        else if (dir == EnterPoint.DIR.Down || dir == EnterPoint.DIR.Up)
+        {
+            float moveX = 0;
+            if (start.position.x > end.position.x)
+            {
+                moveX = start.transform.position.x - end.position.x;
+                targetRoom.transform.position = new Vector3(targetRoom.transform.position.x + moveX, 
+                    targetRoom.transform.position.y, targetRoom.transform.position.z);
+            }
+            else if (end.position.x > start.position.x)
+            {
+                moveX = end.transform.position.x - start.position.x;
+                targetRoom.transform.position = new Vector3(targetRoom.transform.position.x - moveX, 
+                    targetRoom.transform.position.y, targetRoom.transform.position.z);
+            }
+        }
         
         switch (dir)
         {
@@ -161,22 +227,52 @@ public class RoomNode : MonoBehaviour
             typeof(MeshFilter), typeof(MeshRenderer), typeof(RoomPath));
         floor.GetComponent<MeshFilter>().mesh = pathMesh;
         floor.GetComponent<MeshRenderer>().material = _pathMat;
+        Vector3 roofPos =  start.position;
+        Vector3 roofSize = _roofPrefab.transform.Find("Visual").GetComponent<MeshRenderer>().bounds.size;
         if (dir == EnterPoint.DIR.Left || dir == EnterPoint.DIR.Right)
         {
             floor.GetComponent<RoomPath>().
                 SetInfo(topLeftV, bottomLeftV, _wallPrefab, dir);
+            roofPos = new Vector3(roofPos.x, roofPos.y, roofPos.z + roofSize.x);
+            float moveZ = 0;
+            if (start.position.z > end.position.z)
+            {
+                moveZ = start.transform.position.z - end.position.z;
+            }
+            else if (end.position.z > start.position.z)
+            {
+                moveZ = end.transform.position.z - start.position.z;
+            }
+            
+            targetRoom.transform.position = new Vector3(targetRoom.transform.position.x, 
+                targetRoom.transform.position.y, targetRoom.transform.position.z + moveZ);
         }
         else if (dir == EnterPoint.DIR.Down || dir == EnterPoint.DIR.Up)
         {
             floor.GetComponent<RoomPath>().
                 SetInfo(topLeftV, topRightV, _wallPrefab, dir);
+            roofPos = new Vector3(roofPos.x + roofSize.x, roofPos.y, roofPos.z);
+            
+            float moveX = 0;
+            if (start.position.x > end.position.x)
+            {
+                moveX = start.transform.position.x - end.position.x;
+            }
+            else if (end.position.x > start.position.x)
+            {
+                moveX = end.transform.position.x - start.position.x;
+            }
+            
+            targetRoom.transform.position = new Vector3(targetRoom.transform.position.x + moveX, 
+                targetRoom.transform.position.y, targetRoom.transform.position.z);
         }
         
         floor.transform.SetParent(transform.root);
         floor.transform.localPosition = Vector3.zero;
         floor.transform.rotation = Quaternion.identity;
-        Vector3 middle = new Vector3((start.position.x + end.position.x) / 2, 2.65f,
-            end.position.z);
-        floor.GetComponent<RoomPath>().CreateRoof(middle, _roofPrefab , dir);
+        roofPos.y = 2.65f;
+        // Debug.Log($"roof pos : {roofPos}, dir : {dir}");
+        floor.AddComponent<MeshCollider>();
+        floor.GetComponent<RoomPath>().CreateRoof(roofPos, _roofPrefab , dir, roofSize);
     }
 }

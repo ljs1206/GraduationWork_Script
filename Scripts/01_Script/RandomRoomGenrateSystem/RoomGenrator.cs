@@ -1,20 +1,12 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
+using BIS;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public enum SpecialRoomType
 {
     Shop = 0, Bouns, Healing, Boss 
-}
-
-[Serializable]
-public struct SpawnRoomInfo
-{
-    public int shopSpawnCount;
-    public int bounsSpawnCount;
-    public int healingSpawnCount;
-    public int bossSpawnCount;
 }
 
 public struct MapInfo
@@ -25,18 +17,21 @@ public struct MapInfo
 
 public class RoomGenrator : MonoBehaviour
 {
+    [Header("Map Grid Setting")]
     [SerializeField] private int _gridX = 9;
     [SerializeField] private int _gridY = 9;
+    [SerializeField] private int _roomPaddingX;
+    [SerializeField] private int _roomPaddingY;
     
-    [SerializeField] 
-    private int _roomSpawnCount = 0;
+    [Header("Room Spawn Setting")]
+    [SerializeField] private int _roomSpawnCount = 0;
     [SerializeField] private float _pathWidth = 5f;
-    // [SerializeField] private SpawnRoomInfo _spawnInfo;
+    [SerializeField] private int _maxTryCount;
+    [SerializeField] private int _spcialRoomCount;
 
     [SerializeField] private GameObject _startRoom;
     [SerializeField] private RoomTableSO _roomTable;
     [SerializeField] private Material _pathMat;
-    [SerializeField] private int _maxTryCount;
     [SerializeField] private GameObject _wallPrefab;
     [SerializeField] private GameObject _roofPrefab;
 
@@ -46,9 +41,9 @@ public class RoomGenrator : MonoBehaviour
     private int[] _dy = { 0, -1, 0, 1 };
     private bool _isSpawnNow;
 
-    private int currentX = 0;
-    private int currentY = 0;
-    private int _tryCount = 0;
+    private int _currentX;
+    private int _currentY;
+    private int _tryCount;
 
     private Stack<MapInfo> _mapStack;
     private List<MapInfo> _failureList;
@@ -80,6 +75,7 @@ public class RoomGenrator : MonoBehaviour
         Debug.Log("RoomGenrator Default Setting");
         _tryCount++;
         _isSpawnNow = true;
+        
         int rand = 0;
         int currentSpawnCount = 0;
         int failureCount = 0;
@@ -90,16 +86,16 @@ public class RoomGenrator : MonoBehaviour
         _failureList = new(_roomSpawnCount);
         
         _map[4, 4] = 1;
-        currentX = 4;
-        currentY = 4;
+        _currentX = 4;
+        _currentY = 4;
         _mapStack.Push(new MapInfo{ x = 4, y = 4 });
+        
         rand = UnityEngine.Random.Range(0, 4);
-        currentX += _dx[rand];
-        currentY += _dy[rand];
-        _map[currentX, currentY] = 1;
-        _mapStack.Push(new MapInfo{x = currentX, y = currentY});
-
-        Debug.Log("Start : " + currentX + " " + currentY);
+        _currentX += _dx[rand];
+        _currentY += _dy[rand];
+        _map[_currentX, _currentY] = 1;
+        _mapStack.Push(new MapInfo{x = _currentX, y = _currentY});
+        
         ++currentSpawnCount;
         int tryCount = 0;
         for (;;)
@@ -125,9 +121,9 @@ public class RoomGenrator : MonoBehaviour
                 {
                     _mapStack.Pop();
                 }
-                Debug.Log("Reset");
-                currentX = _mapStack.Peek().x;
-                currentY = _mapStack.Peek().y;
+
+                _currentX = _mapStack.Peek().x;
+                _currentY = _mapStack.Peek().y;
                 mainRoomSpawnCount++;
             }
             
@@ -137,11 +133,12 @@ public class RoomGenrator : MonoBehaviour
                 if (CanGenerateRoom(_dx[i], _dy[i]) == true)
                 {
                     createSuccess = true;
-                    currentX += _dx[i];
-                    currentY += _dy[i];
-                    Debug.Log("Success : " + currentX + " " + currentY);
-                    _map[currentX, currentY] = 1;
-                    _mapStack.Push(new MapInfo{x = currentX, y = currentY});
+                    _currentX += _dx[i];
+                    _currentY += _dy[i];
+                    Debug.Log("Success : " + _currentX + " " + _currentY);
+                    
+                    _map[_currentX, _currentY] = 1;
+                    _mapStack.Push(new MapInfo{x = _currentX, y = _currentY});
                     currentSpawnCount++;
                     break;
                 }
@@ -154,16 +151,15 @@ public class RoomGenrator : MonoBehaviour
                     MapInfo currentMap = _mapStack.Pop();
                     _failureList.Add(currentMap);
                     failureCount++;
-                    Debug.Log("Pop : " + currentMap.x + " " + currentMap.y);
-                    currentX = _mapStack.Peek().x;
-                    currentY = _mapStack.Peek().y;
+                    _currentX = _mapStack.Peek().x;
+                    _currentY = _mapStack.Peek().y;
                 }
                 else
                 {
                     failureCount += (_roomSpawnCount / 4) - mainRoomSpawnCount;
                     mainRoomSpawnCount = 0;
-                    currentX = 4;
-                    currentY = 4;
+                    _currentX = 4;
+                    _currentY = 4;
                 }
             }
 
@@ -175,17 +171,17 @@ public class RoomGenrator : MonoBehaviour
         {
             if(failureSpawnCount > failureCount) break;
             
-            currentX =  _failureList[j].x;
-            currentY =  _failureList[j].y;
+            _currentX =  _failureList[j].x;
+            _currentY =  _failureList[j].y;
             
             for (int i = 0; i < 4; ++i)
             {
                 if (CanGenerateRoom(_dx[i], _dy[i], false) == true)
                 {
-                    currentX += _dx[i];
-                    currentY += _dy[i];
-                    _map[currentX, currentY] = 1;
-                    Debug.Log("Success : " + currentX + " " + currentY);
+                    _currentX += _dx[i];
+                    _currentY += _dy[i];
+                    _map[_currentX, _currentY] = 1;
+                    Debug.Log("Success : " + _currentX + " " + _currentY);
                     failureSpawnCount++;
                     currentSpawnCount++;
                     break;
@@ -206,6 +202,7 @@ public class RoomGenrator : MonoBehaviour
     {
         var roomCompoArray = transform.GetComponentsInChildren<RoomNode>();
         var pathCompoArray = transform.GetComponentsInChildren<RoomPath>();
+        var roofCompoArray = transform.GetComponentsInChildren<RoomRoof>();
         for (int i = 0; i < roomCompoArray.Length; i++)
         {
             Debug.Log("DestoryRoom");
@@ -216,15 +213,20 @@ public class RoomGenrator : MonoBehaviour
             Debug.Log("DestoryPath");
             DestroyImmediate(pathCompoArray[i].gameObject);
         }
+        for (int i = 0; i < roofCompoArray.Length; i++)
+        {
+            Debug.Log("DestoryRoof");
+            DestroyImmediate(roofCompoArray[i].gameObject);
+        }
     }
 
     public bool CanGenerateRoom(int x, int y, bool randomFailure = true)
     {
-        if (currentX + x >= _gridX || currentX + x < 0 
-            || currentY + y >= _gridY || currentY + y < 0)
+        if (_currentX + x >= _gridX || _currentX + x < 0 
+            || _currentY + y >= _gridY || _currentY + y < 0)
             return false;
-        int sumX = currentX + x;
-        int sumY = currentY + y;
+        int sumX = _currentX + x;
+        int sumY = _currentY + y;
         
         #region TestCase_1
         if (_map[sumX, sumY] == 1)
@@ -259,16 +261,17 @@ public class RoomGenrator : MonoBehaviour
 
     public void CreateRoom()
     {
-        Debug.Log("CreateRoom");
         _roomArray = new RoomNode[_gridX, _gridY];
         GameObject obj = Instantiate(_startRoom, transform.position, Quaternion.identity);
-        RoomNode room = obj.GetComponent<RoomNode>();
+        obj.name = "start Room";
         obj.transform.SetParent(transform);
         obj.transform.localPosition 
             = new Vector3(40 * 4, 0, 40 * 4);
         obj.transform.rotation = Quaternion.Euler(0, 0, 0);
+        
+        RoomNode room = obj.GetComponent<RoomNode>();
+        room.SetInfo(_wallPrefab, _pathMat, _roomArray, _gridX, _gridY, _pathWidth, _roofPrefab);
         _roomArray[4,4] = room;
-        obj.transform.Find("Tile").GetComponent<TextMeshPro>().text = "4, 4";
         
         // Spawn
         for (int i = 0; i < _gridX; ++i)
@@ -280,19 +283,32 @@ public class RoomGenrator : MonoBehaviour
                 {
                     // todo : Change to Pool
                     obj = Instantiate(_roomTable.RandomReturn().gameObject, transform.position, Quaternion.identity);
-                    room = obj.GetComponent<RoomNode>();
+                    obj.name = $"{i}, {j}";
                     obj.transform.SetParent(transform);
                     obj.transform.localPosition 
-                        = new Vector3(40 * i, 0, 40 * j);
+                        = new Vector3(_roomPaddingX * i, 0, _roomPaddingY * j);
                     obj.transform.rotation = Quaternion.Euler(0, 0, 0);
-                    obj.transform.Find("Tile").GetComponent<TextMeshPro>().text = $"{i}, {j}";
-                    room.SetInfo(_wallPrefab, _pathMat, _roomArray, _gridX, _gridY, _pathWidth, _roofPrefab);
+                    
+                    room = obj.GetComponent<RoomNode>();
                     _roomArray[i, j] = room;
+                    room.SetInfo(_wallPrefab, _pathMat, _roomArray, _gridX, _gridY, _pathWidth, _roofPrefab);
                 }
             }
         }
-        
-        // Link
+
+        SpecialRoomSelector roomSelector = 
+            new SpecialRoomSelector(_map, _gridX, _gridY, _spcialRoomCount);
+        roomSelector.FindNomineePoint();
+
+        Linking();
+    }
+
+    private int _testCnt = 0;
+    public async UniTask Linking()
+    {
+        _testCnt = 0;
+        _roomArray[4, 4].LinkRoom(4, 4);
+        //Link
         for (int i = 0; i < _gridX; ++i)
         {
             for (int j = 0; j < _gridY; ++j)
@@ -300,9 +316,11 @@ public class RoomGenrator : MonoBehaviour
                 if(i == 4 && j == 4) continue;
                 if (_roomArray[i, j] != null)
                 {
-                    _roomArray[i, j].LinkRoom(i, j);
+                    _testCnt++;
+                     await UniTask.WaitUntil(_roomArray[i, j].LinkRoom(i, j));
                 }
             }
         }
+        Debug.Log(_testCnt);
     }
 }

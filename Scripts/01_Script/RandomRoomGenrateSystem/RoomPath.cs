@@ -31,8 +31,8 @@ public class RoomPath : MonoBehaviour
         int wallCount = Mathf.CeilToInt(pathRenderSize / _wallBound.bounds.size.x);
         float wallOverSize =  (_wallBound.bounds.size.x * wallCount) - pathRenderSize;
         // 벽 생성
-        Debug.Log($"Wall Spawn Start, RenderSize : {pathRenderSize}, " +
-                  $"Wall Size : {_wallBound.bounds.size.x}, Wall Count {wallCount}");
+        // Debug.Log($"Wall Spawn Start, RenderSize : {pathRenderSize}, " +
+        //           $"Wall Size : {_wallBound.bounds.size.x}, Wall Count {wallCount}");
         
         int i = 0;
         for (i = 0; i < wallCount; i++)
@@ -56,7 +56,7 @@ public class RoomPath : MonoBehaviour
                     wall.transform.rotation = Quaternion.Euler(0, 90, 0);
                 }
                 Transform visualTrm = wall.transform.Find("Visual");
-                Debug.Log(wallOverSize);
+                // Debug.Log(wallOverSize);
                 float scaleX = visualTrm.transform.localScale.x - wallOverSize / _wallBound.bounds.size.x;
                 visualTrm.localScale = new Vector3(scaleX, 1, 1);
                 break;
@@ -99,7 +99,6 @@ public class RoomPath : MonoBehaviour
                     wall.transform.rotation = Quaternion.Euler(0, 90, 0);
                 }
                 Transform visualTrm = wall.transform.Find("Visual");
-                Debug.Log(wallOverSize);
                 float scaleX = visualTrm.transform.localScale.x - wallOverSize / _wallBound.bounds.size.x;
                 visualTrm.localScale = new Vector3(scaleX, 1, 1);
                 break;
@@ -122,13 +121,22 @@ public class RoomPath : MonoBehaviour
         }
     }
 
-    public void CreateRoof(Vector3 pos, GameObject roofPrefab, EnterPoint.DIR dir)
+    public void CreateRoof(Vector3 pos, GameObject roofPrefab, EnterPoint.DIR dir, Vector3 roofSize)
     {
+        float pathRenderSize = _renderCompo.bounds.size.x > _renderCompo.bounds.size.z
+            ? _renderCompo.bounds.size.x : _renderCompo.bounds.size.z;
         GameObject roof =  Instantiate(roofPrefab, pos, Quaternion.identity);
-        roof.transform.SetParent(transform);
+        roof.transform.SetParent(transform.root);
         if (dir == EnterPoint.DIR.Down || dir == EnterPoint.DIR.Up)
         {
             roof.transform.rotation = Quaternion.Euler(0, 90, 0);
         }
+
+        Vector3 scale = roof.transform.localScale;
+        if(dir == EnterPoint.DIR.Right || dir == EnterPoint.DIR.Down)
+            scale.x = -(pathRenderSize / roofSize.x);
+        else
+            scale.x = pathRenderSize / roofSize.x;
+        roof.transform.localScale = scale;
     }
 }
