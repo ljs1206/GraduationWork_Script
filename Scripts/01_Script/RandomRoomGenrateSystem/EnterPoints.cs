@@ -5,7 +5,7 @@ namespace BIS
 {
     public class EnterPoints : MonoBehaviour
     {
-        private GameObject _gate;
+        [SerializeField] private GameObject _gate;
 
         public void ChangeStatePoint(bool state)
         {

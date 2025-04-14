@@ -118,7 +118,6 @@ public class RoomNode : MonoBehaviour
     {
         if (targetRoom.CreateWall) return;
         targetRoom.CreateWall = true;
-        Debug.Log($"{targetRoom}.{targetRoom.GetHashCode()}");
         
         Mesh pathMesh = new Mesh();
         Vector3 topLeftV = Vector3.zero,
@@ -270,7 +269,7 @@ public class RoomNode : MonoBehaviour
         floor.transform.SetParent(transform.root);
         floor.transform.localPosition = Vector3.zero;
         floor.transform.rotation = Quaternion.identity;
-        roofPos.y = 2.65f;
+        roofPos.y = -2.65f;
         // Debug.Log($"roof pos : {roofPos}, dir : {dir}");
         floor.AddComponent<MeshCollider>();
         floor.GetComponent<RoomPath>().CreateRoof(roofPos, _roofPrefab , dir, roofSize);
