@@ -71,12 +71,12 @@ namespace LJS.Item
         public int weakness;
         #endregion
         
-        private Dictionary<EffectType, int>  effectDict = new();
-		CancellationTokenSource destroyCancellation;
+        private Dictionary<EffectType, int>  _effectDict = new();
+		private CancellationTokenSource _destroyCancellation;
 		
         public ItemSOBase()
         {
-            effectDict = new Dictionary<EffectType, int>
+            _effectDict = new Dictionary<EffectType, int>
             {
                 { EffectType.Heal, healCount },
                 { EffectType.Damage, damageCount },
@@ -85,13 +85,13 @@ namespace LJS.Item
                 { EffectType.DefenceDecrease, defenceDecrease },
                 { EffectType.DefenceIncrease, defenceIncrease }
             };
-			destroyCancellation = new CancellationTokenSource();
+			_destroyCancellation = new CancellationTokenSource();
         }
 		
 		public void OnDestroy()
         {
-            destroyCancellation.Cancel();
-            destroyCancellation.Dispose();
+            _destroyCancellation.Cancel();
+            _destroyCancellation.Dispose();
         }
 
         
@@ -118,18 +118,17 @@ namespace LJS.Item
 
         public float GetValue(EffectType effectType)
         {
-            return effectDict.ContainsKey(effectType) ? effectDict[effectType] : 0;
+            return _effectDict.ContainsKey(effectType) ? _effectDict[effectType] : 0;
         }
 		
 		protected async UniTask Delay(Action action, int delayTime)
         {
             await UniTask.Delay(TimeSpan.FromSeconds(delayTime),
                 false,PlayerLoopTiming.Update, 
-                destroyCancellation.Token);
+                _destroyCancellation.Token);
             action?.Invoke();
         }
-		
-		
+        
         public void PreUpdate()
         {
             

@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BIS;
 using UnityEngine;
-
+namespace LJS.Map
+{
 [Serializable]
 public struct EnterPoint
 {
@@ -274,4 +275,6 @@ public class RoomNode : MonoBehaviour
         floor.AddComponent<MeshCollider>();
         floor.GetComponent<RoomPath>().CreateRoof(roofPos, _roofPrefab , dir, roofSize);
     }
+}
+
 }

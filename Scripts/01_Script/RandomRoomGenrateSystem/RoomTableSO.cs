@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using LJS.Map;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "RoomTableSO", menuName = "SO/RoomTableSO")]

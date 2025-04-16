@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using BIS;
 using Cysharp.Threading.Tasks;
+using LJS.Map;
 using UnityEngine;
 using VInspector.Libs;
 
@@ -50,6 +52,7 @@ public class RoomGenrator : MonoBehaviour
     private List<MapInfo> _failureList;
     private List<MapInfo> _spawnedRoomList;
     private MeshRenderer _renderCompo;
+    private CancellationTokenSource _destroyCancellation;
 
     private void OnValidate()
     {
@@ -74,6 +77,7 @@ public class RoomGenrator : MonoBehaviour
     public void DefaultSetting()
     {
         DestroyAll();
+        _destroyCancellation = new CancellationTokenSource();
         Debug.Log("RoomGenrator Default Setting");
         _tryCount++;
         _isSpawnNow = true;
@@ -321,7 +325,8 @@ public class RoomGenrator : MonoBehaviour
         for (int i = 0; i < _spawnedRoomList.Count; ++i)
         {
             MapInfo info = _spawnedRoomList[i];
-            await UniTask.WaitUntil(_roomArray[info.x, info.y].LinkRoom(info.x, info.y));
+            await UniTask.WaitUntil(_roomArray[info.x, info.y].LinkRoom(info.x, info.y)
+            ,PlayerLoopTiming.Update, _destroyCancellation.Token, true);
         }
         
         // _roomArray[4, 4].LinkRoom(4, 4);
@@ -338,5 +343,11 @@ public class RoomGenrator : MonoBehaviour
         //         }
         //     }
         // }
+    }
+
+    public void OnDestroy()
+    {
+        _destroyCancellation.Cancel();
+        _destroyCancellation.Dispose();
     }
 }
