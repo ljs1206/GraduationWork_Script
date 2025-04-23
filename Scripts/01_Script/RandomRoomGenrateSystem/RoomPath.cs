@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using VInspector.Libs;
 
 namespace LJS.Map
 {
@@ -13,6 +12,13 @@ namespace LJS.Map
         private Vector3 _startTopWallPoint;
         private Vector3 _startBottomWallPoint;
 
+        /// <summary>
+        /// 기본 정보를 설정 함수.
+        /// </summary>
+        /// <param name="startTopWallPoint"> 벽을 처음 설치할 위치 : Top</param>
+        /// <param name="startBottomWallPoint"> 벽을 처음 설치할 위치 : Bottom</param>
+        /// <param name="wallPrefab"></param>
+        /// <param name="dir"> 방향 </param>
         public void SetInfo(Vector3 startTopWallPoint, Vector3 startBottomWallPoint,
              GameObject wallPrefab, EnterPoint.DIR dir)
         {
@@ -25,7 +31,13 @@ namespace LJS.Map
             _wallBound = visualTrm.GetComponent<MeshRenderer>();
             CreateWall(dir);
         }
-
+        
+        /// <summary>
+        /// 벽 동적 생성
+        /// 생성하는 EnterPoint의 방향에 따라서 회전을 해줌
+        /// 만약 벽이 짤린다면 벽의 Scale를 줄여준다.
+        /// </summary>
+        /// <param name="dir"></param>
         private void CreateWall(EnterPoint.DIR dir)
         {
             float pathRenderSize = _renderCompo.bounds.size.x > _renderCompo.bounds.size.z
@@ -86,7 +98,6 @@ namespace LJS.Map
                 GameObject wall = null;
                 if (i == wallCount - 1)
                 {
-                    // todo : Mesh나 Scale 줄여서 짤리는 부분 없애기
                     wall = Instantiate(_wallPrefab, transform.root);
                     if (dir == EnterPoint.DIR.Left || dir == EnterPoint.DIR.Right)
                     {
@@ -123,6 +134,14 @@ namespace LJS.Map
             }
         }
 
+        /// <summary>
+        /// 천장을 생성해준다.
+        /// 벽과 비슷한 방식으로 생성하되 Scale를 늘리는 방식을 채택했다.
+        /// </summary>
+        /// <param name="pos"> 위치 </param>
+        /// <param name="roofPrefab"></param>
+        /// <param name="dir"> 방향 </param>
+        /// <param name="roofSize"></param>
         public void CreateRoof(Vector3 pos, GameObject roofPrefab, EnterPoint.DIR dir, Vector3 roofSize)
         {
             float pathRenderSize = _renderCompo.bounds.size.x > _renderCompo.bounds.size.z

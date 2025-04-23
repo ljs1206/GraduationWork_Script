@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using BIS;
 using UnityEngine;
 namespace LJS.Map
 {
@@ -22,6 +20,9 @@ public class RoomNode : MonoBehaviour
     public BoxCollider Width;
     public BoxCollider Height;
 
+    [SerializeField] private LayerMask _pathLayer;
+    [SerializeField] private Material _miniMapMaterial;
+
     private GameObject _wallPrefab;
     private GameObject _roofPrefab;
     private Material _pathMat;
@@ -29,11 +30,22 @@ public class RoomNode : MonoBehaviour
     private int _gridX;
     private int _gridY;
     private float _pathWidth;
+    private List<EnterPoints> _enterPointsList;
     
     private int[] _dx = { 0, 0, -1, 1 };
     private int[] _dy = { 1, -1, 0, 0 };
     public bool CreateWall { get; private set; }
 
+    /// <summary>
+    /// 기본 정보 설정 하는 함수
+    /// </summary>
+    /// <param name="wallPrefab"> Path의 벽</param>
+    /// <param name="pathMat">Path의 Material</param>
+    /// <param name="roomArray"> 생성된 방 이차원 배열(x,y)</param>
+    /// <param name="gridX"> 최대 크키 : x</param>
+    /// <param name="gridY"> 최대 크키 : y</param>
+    /// <param name="pathWidth"> Path의 넓이</param>
+    /// <param name="roofPrefab"> 천장 Prefab</param>
     public void SetInfo(GameObject wallPrefab, Material pathMat
         , RoomNode[,] roomArray, int gridX, int gridY, float pathWidth, GameObject roofPrefab)
     {
@@ -47,7 +59,12 @@ public class RoomNode : MonoBehaviour
         CreateWall = false;
     }
     
-    public Func<bool> LinkRoom(int x, int y)
+    /// <summary>
+    /// 실제 방과 방을 연결해주는 함수
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    public void LinkRoom(int x, int y)
     {
         // Debug.Log("Link Start");
         for (int i = 0; i < 4; ++i)
@@ -58,6 +75,8 @@ public class RoomNode : MonoBehaviour
             if (x + _dx[i] < 0 || x + _dx[i] >= _gridX) continue;
             if (_roomArray[x + _dx[i], y + _dy[i]] != null)
             {
+                // 미리 만들어 둔 EnterPoint 중 어디 방향인지 찾음.
+                // 그리고 맞보는 방향과 이어줌
                 EnterPoint.DIR dir = FindDir(_dx[i], _dy[i]);
                 EnterPoint.DIR reverseDir = EnterPoint.DIR.None;
 
@@ -90,9 +109,14 @@ public class RoomNode : MonoBehaviour
         }
 
         _roomArray[x, y].CreateWall = true;
-        return () => true;
     }
 
+    /// <summary>
+    /// 방향 찾기용 함수
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
     private EnterPoint.DIR FindDir(int x, int y)
     {
         for (int i = 0; i < 4; ++i)
@@ -115,6 +139,16 @@ public class RoomNode : MonoBehaviour
         return EnterPoint.DIR.None;
     }
 
+    /// <summary>
+    /// Path 동적 생성 함수
+    /// Mesh를 방과 방의 EnterPoint의 위치에 따라서 start, end로 이어줌
+    /// 그리고 Vertice, Triangle, uv를 고려하여 생성해서 배치함
+    /// Start를 기준으로 End가 제대로 맞물리지 않는다면 End에 속하는 Room를 맞물리게 이동함
+    /// </summary>
+    /// <param name="start"></param>
+    /// <param name="end"></param>
+    /// <param name="dir"></param>
+    /// <param name="targetRoom"></param>
     private void CreatePath(Transform start, Transform end, EnterPoint.DIR dir, RoomNode targetRoom)
     {
         if (targetRoom.CreateWall) return;
@@ -227,6 +261,7 @@ public class RoomNode : MonoBehaviour
             typeof(MeshFilter), typeof(MeshRenderer), typeof(RoomPath));
         floor.GetComponent<MeshFilter>().mesh = pathMesh;
         floor.GetComponent<MeshRenderer>().material = _pathMat;
+        
         Vector3 roofPos =  start.position;
         Vector3 roofSize = _roofPrefab.transform.Find("Visual").GetComponent<MeshRenderer>().bounds.size;
         if (dir == EnterPoint.DIR.Left || dir == EnterPoint.DIR.Right)
@@ -270,10 +305,42 @@ public class RoomNode : MonoBehaviour
         floor.transform.SetParent(transform.root);
         floor.transform.localPosition = Vector3.zero;
         floor.transform.rotation = Quaternion.identity;
-        roofPos.y = -2.65f;
+        roofPos.y = -2.35f;
         // Debug.Log($"roof pos : {roofPos}, dir : {dir}");
         floor.AddComponent<MeshCollider>();
         floor.GetComponent<RoomPath>().CreateRoof(roofPos, _roofPrefab , dir, roofSize);
+
+        GameObject miniMapFloor = Instantiate(floor, transform.root, true);
+        miniMapFloor.transform.localPosition = Vector3.zero;
+        miniMapFloor.transform.rotation = Quaternion.identity;
+        
+        miniMapFloor.GetComponent<MeshRenderer>().material = _miniMapMaterial;
+        miniMapFloor.layer = 17;
+    }
+    
+    /// <summary>
+    /// 방이 전투 상태에 돌입했다면
+    /// </summary>
+    /// <param name="state"></param>
+    public void ChangeBattleState(bool state)
+    {
+        if (_enterPointsList == null)
+        {
+            _enterPointsList = new(EnterPointList.Count);
+            foreach (var point in EnterPointList)
+            {
+                EnterPoints compo = point.transform.GetComponent<EnterPoints>();
+                _enterPointsList.Add(compo);
+                compo.ChangeStatePoint(state);
+            }
+
+            return;
+        }
+
+        foreach (var point in _enterPointsList)
+        {
+            point.ChangeStatePoint(state);
+        }
     }
 }
 

@@ -1,0 +1,6 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <engine:Template name="TabSplitView" src="project://database/Assets/00Work/LJS/Editor/10_UI/SOManagementWindow/TabSplitView.uxml?fileID=9197481963319205126&amp;guid=3584ac99b5cbbcd44a3402f7b524d3af&amp;type=3#TabSplitView" />
+    <Style src="project://database/Assets/00Work/LJS/Editor/10_UI/ItemCreator/ItemCreater.uss?fileID=7433441132597879392&amp;guid=5ec1da0135e453047b5fa8281e46bce6&amp;type=3#ItemCreater" />
+    <Style src="project://database/Assets/00Work/LJS/Editor/10_UI/MakePrefabWindow.uss?fileID=7433441132597879392&amp;guid=4d8bf05f45ec2884e9c0cbfe150365af&amp;type=3#MakePrefabWindow" />
+    <engine:Instance template="TabSplitView" name="TabSplitView" />
+</engine:UXML>

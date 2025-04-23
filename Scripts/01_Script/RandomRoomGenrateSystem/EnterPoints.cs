@@ -10,8 +10,7 @@ namespace LJS.Map
         
         public void ChangeStatePoint(bool state)
         {
-            if(!_doorCompo) _doorCompo = _gate.GetComponent<RoomDoor>();
-            Debug.Log(_doorCompo);
+            if (!_doorCompo) _doorCompo = _gate.GetComponent<RoomDoor>();
             _doorCompo?.ChangeDoorAnimation(state);
         }
     }

@@ -1,0 +1,21 @@
+{
+    "name": "LJS_RRG",
+    "rootNamespace": "LJS.Map",
+    "references": [
+        "GUID:308c623e4493ebb40a9d8177e9a2043b",
+        "GUID:9e76ffd1f3f77a246968f93aa898a174",
+        "GUID:6374a02135f2b7240980125fea8c745f",
+        "GUID:bc2bccc7fdd309a4a9509427df1b7d94",
+        "GUID:df520f69b0881294b925a872bae7d661",
+        "GUID:0664225a2ff14d64ea099dd6240c2f4e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

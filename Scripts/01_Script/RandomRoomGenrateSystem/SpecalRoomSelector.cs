@@ -1,8 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BIS
+namespace LJS.Map
 {
+    public struct SpecialRoom
+    {
+        public Vector2Int pos;
+        public SpecialRoomType type;
+    }
     public class SpecialRoomSelector
     {
         private int[,] _integerMap;
@@ -13,7 +18,7 @@ namespace BIS
         private int _specialRoomSpawnCount;
         private bool _spawn;
         private bool _increaseNow;
-        private List<Vector2Int> _specialRoomList;
+        private List<SpecialRoom> _specialRoomList;
         private List<Vector2Int> _specialNomineeRoomList;
         
         public SpecialRoomSelector(int[,] map, int maxX, int maxY, int maxSpawnCount)
@@ -27,7 +32,7 @@ namespace BIS
             FindNomineePoint();
         }
 
-        public void FindNomineePoint()
+        public SpecialRoom[] FindNomineePoint()
         {
             _currentRoomSpawnCount = 0;
             _specialRoomList.Clear();
@@ -41,13 +46,13 @@ namespace BIS
                     Vector2Int room = _specialNomineeRoomList[i];
                     if (_spawned[room.x, room.y] == 0)
                     {
-                        _specialRoomList.Add(new Vector2Int(room.x, room.y));
+                        _specialRoomList.Add(new SpecialRoom { pos = new Vector2Int(room.x, room.y), 
+                            type = SpecialRoomType.None});
                         _currentRoomSpawnCount++;
-                        // Debug.Log($"SpecialRoom Pos : " + room.x + ", " + room.y);
-                        // Debug.Log(_currentRoomSpawnCount);
                     }
                 }
             }
+            return _specialRoomList.ToArray();
         }
 
         private void BFS()
@@ -109,7 +114,8 @@ namespace BIS
             if (_currentRoomSpawnCount >= _specialRoomSpawnCount) return;
                 
             _currentRoomSpawnCount++;
-            _specialRoomList.Add(new Vector2Int(nextX, nextY));
+            _specialRoomList.Add(new SpecialRoom { pos = new Vector2Int(nextX, nextY),
+                type = SpecialRoomType.None} );
             _spawned[nextX, nextY] = 1;
             // Debug.Log($"SpecialRoom Pos : " + nextX + ", " + nextY);
         }
