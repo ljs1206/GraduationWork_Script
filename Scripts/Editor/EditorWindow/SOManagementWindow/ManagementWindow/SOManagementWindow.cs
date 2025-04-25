@@ -53,9 +53,6 @@ public class SOManagementWindow : EditorWindow
     private Label _selectedLabel;
     private TextField _fileNameField;
     private VisualElement _selected;
-    private Button _makeBtn;
-    private Button _deleteBtn;
-    private Button _renameBtn;
     #endregion
     
     /// <summary>
@@ -94,7 +91,21 @@ public class SOManagementWindow : EditorWindow
     /// </summary>
     private bool _isEndStartSetting = false;
 
-    [MenuItem("Editor/LJS/SOManagementWindow")]
+    public SOManagementWindow()
+    {
+        if (_soTypeTable == null)
+        {
+            string[] soGuidArray = AssetDatabase.FindAssets("t:SOTypeTable");
+            string path = "s";
+            if (soGuidArray.Length > 2)
+            {
+                Debug.LogError("SOTypeTable More than one has been created. Please reduce it to one.");
+                Close();
+                return;
+            }
+        }
+    }
+    
     public static void ShowExample()
     {
         SOManagementWindow wnd = GetWindow<SOManagementWindow>();
@@ -120,6 +131,8 @@ public class SOManagementWindow : EditorWindow
         Tab tab = null;
         for (int i = 0; i < _soTypeTable._typeList.Count; ++i)
         {
+            if(_soTypeTable._typeList[i] == null) continue;
+            
             var template = _tabSplitView.Instantiate().Q<VisualElement>();
             string tabName = _soTypeTable._typeList[i].Name;
 
@@ -258,10 +271,15 @@ public class SOManagementWindow : EditorWindow
     
     private void HandleRenameBtnClickEvent()
     {
+        if (_currentTab == null)
+        {
+            Debug.LogError("Tab is not select");
+            return;
+        }
+        
         if(_selected == null) return;
         
         string path = _soPathDict[_currentData];
-        Debug.Log(path);
         ScriptableObject changeTarget = AssetDatabase.LoadAssetAtPath<ScriptableObject>(
             path);
 
@@ -274,6 +292,12 @@ public class SOManagementWindow : EditorWindow
 
     private void HandleDeleteBtnClickEvent()
     {
+        if (_currentTab == null)
+        {
+            Debug.LogError("Tab is not select");
+            return;
+        }
+        
         if (_selected == null)
         {
             Debug.LogError("Select None");
@@ -293,6 +317,7 @@ public class SOManagementWindow : EditorWindow
         _soDataDictionary[_currentTab.label].Remove(changeTarget);
         
         AssetDatabase.DeleteAsset(path);
+        EditorUtility.SetDirty(changeTarget);
         AssetDatabase.SaveAssets();
 
         Editor cachedEditor = _cachedEditorDict[changeTarget];
@@ -305,6 +330,12 @@ public class SOManagementWindow : EditorWindow
 
     private void HandleMakeBtnClickEvent()
     {
+        if (_currentTab == null)
+        {
+            Debug.LogError("Tab is not select");
+            return;
+        }
+        
         Type soType = _typeDict[_currentTab];
         string path = _soTypeTable.ReturnPath(soType);
 
@@ -359,7 +390,5 @@ public class SOManagementWindow : EditorWindow
             _createdTabList[i].Q<Button>("DeleteBtn").clicked -= HandleDeleteBtnClickEvent;
             _createdTabList[i].Q<Button>("RenameBtn").clicked -= HandleRenameBtnClickEvent;
         }
-        
-        _cachedGUI.Dispose();
     }
 }

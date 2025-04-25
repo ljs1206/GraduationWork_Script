@@ -13,6 +13,7 @@
                 <engine:Button text="Create" name="MakeBtn" style="width: 100px; -unity-font-definition: url(&quot;project://database/Assets/00Work/LJS/04_Font/DNFForgedBlade-Medium.ttf?fileID=12800000&amp;guid=57d31f5b8589fcb4685194f4e84723b1&amp;type=3#DNFForgedBlade-Medium&quot;); height: 35px; bottom: -20px;" />
                 <engine:Button text="Rename" name="RenameBtn" selectable="true" style="width: 100px; -unity-font-definition: url(&quot;project://database/Assets/00Work/LJS/04_Font/DNFForgedBlade-Medium.ttf?fileID=12800000&amp;guid=57d31f5b8589fcb4685194f4e84723b1&amp;type=3#DNFForgedBlade-Medium&quot;); bottom: -20px; height: 35px;" />
             </editor:Toolbar>
+            <engine:TextField label="ChangeFileName" hide-placeholder-on-focus="true" max-length="20" name="FileNameField" style="-unity-font-definition: url(&quot;project://database/Assets/00Work/LJS/04_Font/DNFForgedBlade-Medium.ttf?fileID=12800000&amp;guid=57d31f5b8589fcb4685194f4e84723b1&amp;type=3#DNFForgedBlade-Medium&quot;);" />
             <engine:IMGUIContainer />
         </engine:VisualElement>
     </SplitView>

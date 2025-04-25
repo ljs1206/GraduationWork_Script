@@ -26,6 +26,8 @@ namespace Editors.SO
                 {
                     _typeList.Add(type.so.GetType());
                 }
+                else
+                    Debug.LogError($"{type.so.GetType().Name} is already registered please not insert this type Scriptable Object");
             }
         }
 
